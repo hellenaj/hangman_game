@@ -11,14 +11,17 @@ import random
 import sys
 import pyinputplus as pyip
 
-words = ['fish', 'crocodile', 'dog', 'dinosaur', 'giraffe', 'elephant', 'bird']
+
+file = r'word_hangman.txt'
 number_of_tries = pyip.inputMenu(['entry', 'intermediate', 'professional'], 'Select a difficulty level: \n',
                                  numbered=True, )
 
 
-def random_word(list_of_words):
-    word = random.choice(list_of_words)
-    return word
+def random_word(filename):
+    with open(filename, mode='r') as f:
+        line = f.readline().split(', ')
+        word = random.choice(line)
+        return word
 
 
 class Hangman:
@@ -55,10 +58,11 @@ class Hangman:
         user_letters = []
         user_words_result = self.hidden_word()
         chance = self.choose_difficulty()
-
         print(f"Word to guess: {''.join(user_words_result)}")
         while True:
             user_letter = pyip.inputStr('Give a letter: ')
+            if user_letter in user_letters:
+                print("You've used this letter, please give another letter: ")
             user_letters.append(user_letter)
             founded_indexes = self.find_indexes(user_letter)
             if len(founded_indexes) == 0:
@@ -66,26 +70,25 @@ class Hangman:
                 chance -= 1
                 if chance == 0:
                     print('Game Over!')
-                    self.play_again(random_word(words), number_of_tries)
+                    break
             else:
                 for index in founded_indexes:
                     user_words_result[index] = user_letter
-                    if ''.join(user_words_result) == self.word:
-                        print('You won!!!')
-                        self.play_again(random_word(words), number_of_tries)
+
+                if ''.join(user_words_result) == self.word:
+                    print('You won!!!')
+                    break
             self.show_game_status(chance, user_words_result)
 
-    @classmethod
-    def play_again(cls, word, level):
-        message = pyip.inputYesNo('Do you like to play again?')
-        print(message)
-        if message == 'yes':
-            cls(word, level).play_game()
-        else:
-            sys.exit(0)
 
+while True:
+    Hangman(random_word(file), number_of_tries).play_game()
+    message = pyip.inputYesNo('Do you like to play again?')
+    print(message)
+    if message == 'yes':
+        continue
+    else:
+        sys.exit(0)
 
-if __name__ == '__main__':
-    Hangman(random_word(words), number_of_tries).play_game()
 
 
